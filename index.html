@@ -1393,5 +1393,472 @@ async function saveToFirebase() {
 
 loadData();
 </script>
+<!-- ================= CONSULTATION BOOKING SECTION (NAVER STYLE) ================= -->
+<section id="consultation-booking" class="booking-section">
+  <div class="booking-container">
+    <div class="booking-header">
+      <h2>교사 및 카운슬러 상담 예약</h2>
+      <p>상담을 희망하시는 선생님을 선택하신 후, 날짜와 시간을 예약해 주세요.</p>
+    </div>
+
+    <!-- Step 1: Select Teacher -->
+    <div class="booking-step">
+      <div class="step-title"><span>1</span> 선생님 선택</div>
+      <div class="teacher-grid">
+        
+        <!-- Teacher 1 -->
+        <div class="teacher-card" onclick="selectTeacher(this, '박일수 (Patrick Park)', '진학상담 / 사회과')">
+          <div class="teacher-avatar">
+            <img src="https://via.placeholder.com/120x120?text=Patrick+Park" alt="박일수 선생님" />
+          </div>
+          <h4>박일수 선생님</h4>
+          <span class="role">진학상담 / 사회과</span>
+          <span class="badge">예약 가능</span>
+        </div>
+
+        <!-- Teacher 2 -->
+        <div class="teacher-card" onclick="selectTeacher(this, '홍지민', '진학상담 / 교과')">
+          <div class="teacher-avatar">
+            <img src="https://via.placeholder.com/120x120?text=Hong+Jimin" alt="홍지민 선생님" />
+          </div>
+          <h4>홍지민 선생님</h4>
+          <span class="role">진학상담 / 교과</span>
+          <span class="badge">예약 가능</span>
+        </div>
+
+        <!-- Teacher 3 -->
+        <div class="teacher-card" onclick="selectTeacher(this, '정광문', '진학상담 / 기획')">
+          <div class="teacher-avatar">
+            <img src="https://via.placeholder.com/120x120?text=Jeong+Kwangmun" alt="정광문 선생님" />
+          </div>
+          <h4>정광문 단장님</h4>
+          <span class="role">진학상담 / 기획</span>
+          <span class="badge">예약 가능</span>
+        </div>
+
+        <!-- Teacher 4 -->
+        <div class="teacher-card" onclick="selectTeacher(this, '김준영 (Jason)', '교기단 / 카운슬러')">
+          <div class="teacher-avatar">
+            <img src="https://via.placeholder.com/120x120?text=Jason+Kim" alt="김준영 선생님" />
+          </div>
+          <h4>김준영 선생님</h4>
+          <span class="role">교기단 / 카운슬러</span>
+          <span class="badge">예약 가능</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Step 2: Date & Time Picker (Hidden until teacher selected) -->
+    <div id="datetime-section" class="booking-step disabled">
+      <div class="step-title"><span>2</span> 날짜 및 시간 선택</div>
+      
+      <div class="datetime-wrapper">
+        <div class="date-picker-box">
+          <label for="booking-date">상담 희망일</label>
+          <input type="date" id="booking-date" onchange="loadAvailableSlots()" />
+        </div>
+
+        <div class="time-slot-box">
+          <label>상담 가능 시간</label>
+          <div class="time-grid" id="time-slots">
+            <p class="helper-text">선생님과 날짜를 먼저 선택해 주세요.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Parent Contact Details -->
+    <div id="contact-section" class="booking-step disabled">
+      <div class="step-title"><span>3</span> 예약자 정보 입력</div>
+      <form id="booking-form" onsubmit="handleBookingSubmit(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label>학부모 성함 *</label>
+            <input type="text" id="parent-name" placeholder="예: 홍길동" required />
+          </div>
+          <div class="form-group">
+            <label>연락처 *</label>
+            <input type="tel" id="parent-phone" placeholder="010-0000-0000" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>학생 이름 및 학년 *</label>
+            <input type="text" id="student-info" placeholder="예: 11학년 김선진" required />
+          </div>
+          <div class="form-group">
+            <label>상담 형태 *</label>
+            <select id="consultation-type" required>
+              <option value="">선택해 주세요</option>
+              <option value="대면 상담 (교내 방문)">대면 상담 (교내 방문)</option>
+              <option value="온라인 화상 상담 (Zoom)">온라인 화상 상담 (Zoom)</option>
+              <option value="전화 상담">전화 상담</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group full-width">
+          <label>사전 문의 사항 / 상담 희망 주제</label>
+          <textarea id="consultation-memo" rows="3" placeholder="예: 11학년 AP 과목 선정 및 약대 진학 트랙 상담 희망합니다."></textarea>
+        </div>
+
+        <button type="submit" class="submit-booking-btn">예약 신청하기</button>
+      </form>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="booking-modal">
+      <div class="modal-card">
+        <div class="check-icon">✓</div>
+        <h3>상담 예약이 접수되었습니다</h3>
+        <p>선생님 확인 후 예약 확정 안내 문자가 발송됩니다.</p>
+        <div class="receipt-box" id="receipt-details"></div>
+        <button onclick="closeModal()" class="modal-close-btn">확인</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= EMBEDDED STYLING ================= -->
+<style>
+  .booking-section {
+    padding: 60px 20px;
+    background-color: #fdfdfd;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Malgun Gothic", sans-serif;
+  }
+  .booking-container {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  .booking-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .booking-header h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #9e1b1e;
+    margin-bottom: 8px;
+  }
+  .booking-header p {
+    color: #666;
+    font-size: 15px;
+  }
+  .booking-step {
+    background: #ffffff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    transition: opacity 0.3s ease;
+  }
+  .booking-step.disabled {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+  .step-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #222;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .step-title span {
+    background: #9e1b1e;
+    color: #fff;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  /* Teacher Cards */
+  .teacher-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .teacher-card {
+    border: 2px solid #eee;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .teacher-card:hover {
+    border-color: #9e1b1e;
+    transform: translateY(-3px);
+  }
+  .teacher-card.active {
+    border-color: #9e1b1e;
+    background-color: #fff8f8;
+  }
+  .teacher-avatar img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 12px;
+    border: 2px solid #eee;
+  }
+  .teacher-card h4 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    color: #111;
+  }
+  .teacher-card .role {
+    font-size: 13px;
+    color: #777;
+    display: block;
+    margin-bottom: 10px;
+  }
+  .teacher-card .badge {
+    background: #03c75a; /* Naver green accent */
+    color: #fff;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+  /* Datetime Layout */
+  .datetime-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+  }
+  @media (max-width: 600px) {
+    .datetime-wrapper { grid-template-columns: 1fr; }
+  }
+  .date-picker-box input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 15px;
+    box-sizing: border-box;
+  }
+  .time-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .time-slot {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    text-align: center;
+    background: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .time-slot:hover {
+    border-color: #9e1b1e;
+  }
+  .time-slot.selected {
+    background: #9e1b1e;
+    color: #fff;
+    border-color: #9e1b1e;
+  }
+  /* Form Inputs */
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+  }
+  .form-group label {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #333;
+  }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+  .full-width { margin-bottom: 20px; }
+  .submit-booking-btn {
+    width: 100%;
+    padding: 16px;
+    background-color: #9e1b1e;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .submit-booking-btn:hover {
+    background-color: #7d1417;
+  }
+  /* Modal */
+  .booking-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  .modal-card {
+    background: #fff;
+    padding: 32px;
+    border-radius: 12px;
+    max-width: 440px;
+    width: 90%;
+    text-align: center;
+  }
+  .check-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #e8f7ee;
+    color: #03c75a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin: 0 auto 16px;
+  }
+  .receipt-box {
+    background: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    padding: 16px;
+    text-align: left;
+    margin: 20px 0;
+    font-size: 13.5px;
+    line-height: 1.8;
+  }
+  .modal-close-btn {
+    background: #222;
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+</style>
+
+<!-- ================= JAVASCRIPT LOGIC ================= -->
+<script>
+  let bookingState = {
+    teacherName: null,
+    teacherRole: null,
+    date: null,
+    time: null
+  };
+
+  // 1. Select Teacher
+  function selectTeacher(element, name, role) {
+    document.querySelectorAll('.teacher-card').forEach(c => c.classList.remove('active'));
+    element.classList.add('active');
+    
+    bookingState.teacherName = name;
+    bookingState.teacherRole = role;
+
+    // Enable Step 2
+    document.getElementById('datetime-section').classList.remove('disabled');
+
+    // Auto set date min to today
+    const dateInput = document.getElementById('booking-date');
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+    if (!dateInput.value) dateInput.value = today;
+
+    loadAvailableSlots();
+  }
+
+  // 2. Load Available Time Slots
+  function loadAvailableSlots() {
+    bookingState.date = document.getElementById('booking-date').value;
+    const timeSlotsContainer = document.getElementById('time-slots');
+    
+    // Sample available slots (Can be replaced by Google Calendar or backend fetch)
+    const availableHours = [
+      '09:30 AM', '10:30 AM', '11:30 AM', 
+      '01:30 PM', '02:30 PM', '03:30 PM', '04:30 PM'
+    ];
+
+    timeSlotsContainer.innerHTML = '';
+    availableHours.forEach(time => {
+      const btn = document.createElement('div');
+      btn.className = 'time-slot';
+      btn.innerText = time;
+      btn.onclick = () => selectTime(btn, time);
+      timeSlotsContainer.appendChild(btn);
+    });
+  }
+
+  // 3. Select Time
+  function selectTime(element, time) {
+    document.querySelectorAll('.time-slot').forEach(slot => slot.classList.remove('selected'));
+    element.classList.add('selected');
+    bookingState.time = time;
+
+    // Enable Step 3 (Form)
+    document.getElementById('contact-section').classList.remove('disabled');
+  }
+
+  // 4. Handle Submission
+  function handleBookingSubmit(event) {
+    event.preventDefault();
+
+    if (!bookingState.teacherName || !bookingState.date || !bookingState.time) {
+      alert("선생님, 상담 날짜, 시간을 모두 선택해 주세요.");
+      return;
+    }
+
+    const parentName = document.getElementById('parent-name').value;
+    const parentPhone = document.getElementById('parent-phone').value;
+    const studentInfo = document.getElementById('student-info').value;
+    const type = document.getElementById('consultation-type').value;
+    const memo = document.getElementById('consultation-memo').value;
+
+    // Populate Modal Summary
+    const receiptHTML = `
+      <strong>상담 교사:</strong> ${bookingState.teacherName} (${bookingState.teacherRole})<br>
+      <strong>예약 일시:</strong> ${bookingState.date} ${bookingState.time}<br>
+      <strong>상담 형태:</strong> ${type}<br>
+      <strong>학생 정보:</strong> ${studentInfo}<br>
+      <strong>신청 학부모:</strong> ${parentName} (${parentPhone})
+    `;
+    document.getElementById('receipt-details').innerHTML = receiptHTML;
+
+    // Display Modal
+    document.getElementById('confirmation-modal').style.display = 'flex';
+
+    /* 
+      Optional: To log this reservation to a Google Sheet automatically, 
+      send a POST request with bookingState and form values to a Google Apps Script Web App URL.
+    */
+  }
+
+  function closeModal() {
+    document.getElementById('confirmation-modal').style.display = 'none';
+    location.reload(); // Refresh to clear state
+  }
+</script>
 </body>
 </html>
